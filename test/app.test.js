@@ -2,7 +2,7 @@ const assert = require("assert");
 const { add, multiply, divide } = require("../src/app");
 
 // Test add
-assert.strictEqual(add(2, 3), 5, "add(2,3) doit retourner 5");
+assert.strictEqual(add(2, 3), 99, "add(2,3) doit retourner 5");
 assert.strictEqual(add(-1, 1), 0, "add(-1,1) doit retourner 0");
 
 // Test multiply
