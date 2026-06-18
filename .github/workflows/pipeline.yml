@@ -1,0 +1,107 @@
+name: Pipeline CI/CD - TP1
+
+# Déclenchement automatique sur tout push (toutes branches)
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # ─────────────────────────────────────────
+  # STAGE 1 — BUILD
+  # Vérifie que l'environnement est opérationnel
+  # et que le code peut être "construit"
+  # ─────────────────────────────────────────
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installation des dépendances
+        run: npm install
+
+      - name: Vérification de la syntaxe (lint basique)
+        run: node --check src/app.js
+
+      - name: Sauvegarde des artefacts intermédiaires
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-build
+          path: |
+            src/
+            test/
+            package.json
+          retention-days: 1
+
+  # ─────────────────────────────────────────
+  # STAGE 2 — TEST
+  # Exécution des tests automatisés
+  # Fail fast : si un test échoue, le pipeline
+  # s'arrête ici et le stage Package ne s'exécute pas
+  # ─────────────────────────────────────────
+  test:
+    name: "Test"
+    runs-on: ubuntu-latest
+    needs: build   # dépend du stage build
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installation des dépendances
+        run: npm install
+
+      - name: Exécution des tests
+        run: npm test
+
+  # ─────────────────────────────────────────
+  # STAGE 3 — PACKAGE
+  # Production de l'artefact final (archive zip)
+  # Ne s'exécute QUE si le stage Test est au vert
+  # ─────────────────────────────────────────
+  package:
+    name: "Package"
+    runs-on: ubuntu-latest
+    needs: test    # dépend du stage test — fail fast garanti
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installation des dépendances
+        run: npm install
+
+      - name: Création de l'artefact (archive)
+        run: |
+          mkdir -p dist
+          zip -r dist/tp1-cicd-${{ github.sha }}.zip src/ package.json
+          echo "Artefact créé : tp1-cicd-${{ github.sha }}.zip"
+          ls -lh dist/
+
+      - name: Publication de l'artefact final
+        uses: actions/upload-artifact@v4
+        with:
+          name: tp1-cicd-package
+          path: dist/
+          retention-days: 7

@@ -1,0 +1,11 @@
+{
+  "name": "tp1-cicd",
+  "version": "1.0.0",
+  "description": "Application de démonstration pour le TP1 CI/CD",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "node test/app.test.js"
+  },
+  "author": "",
+  "license": "MIT"
+}
